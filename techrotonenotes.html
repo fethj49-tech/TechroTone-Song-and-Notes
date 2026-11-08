@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechroTone // Song & Notes</title>
+    <style>
+        :root {
+            --bg-deep: #0a0b10;
+            --bg-panel: #13151f;
+            --bg-card: #1b1e2e;
+            --accent-cyan: #00f0ff;
+            --accent-orange: #ff9100;
+            --accent-purple: #9d00ff;
+            --text-main: #e2e8f0;
+            --text-dim: #8b9bb4;
+            --border: #2a2f45;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: monospace;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: var(--bg-panel);
+            border-bottom: 2px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+
+        .controls-toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        button:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+        }
+
+        button.active {
+            background: var(--accent-cyan);
+            color: var(--bg-deep);
+            font-weight: bold;
+        }
+
+        button.accent {
+            background: var(--accent-orange);
+            color: #000;
+            font-weight: bold;
+            border: none;
+        }
+
+        button.accent:hover {
+            box-shadow: 0 0 10px rgba(255, 145, 0, 0.4);
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            flex: 1;
+            height: calc(100vh - 60px);
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        .sidebar {
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+        }
+
+        .toolbox-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .canvas-area {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sheet-container {
+            background: #ffffff;
+            color: #000;
+            border-radius: 6px;
+            padding: 30px;
+            min-height: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+
+        .sheet-title-input {
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: monospace;
+            width: 60%;
+        }
+
+        .staff-system {
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .staff-lines {
+            height: 60px;
+            background-image: repeating-linear-gradient(
+                to bottom,
+                #000,
+                #000 1px,
+                transparent 1px,
+                transparent 14px
+            );
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .note-element {
+            position: absolute;
+            width: 14px;
+            height: 10px;
+            background: #000;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) rotate(-10deg);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .note-element::after {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: -18px;
+            width: 2px;
+            height: 24px;
+            background: #000;
+        }
+
+        .note-element.selected {
+            background: var(--accent-orange);
+            box-shadow: 0 0 6px var(--accent-orange);
+        }
+
+        .note-element.selected::after {
+            background: var(--accent-orange);
+        }
+
+        .player-console {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .console-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        select, input[type="range"] {
+            background: var(--bg-deep);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .status-bar {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">TECHROTONE // SONG & NOTES</div>
+        <div class="controls-toolbar">
+            <button onclick="app.newSheet()">New Sheet</button>
+            <button onclick="app.exportJson()">Export JSON</button>
+            <button onclick="app.importJsonPrompt()">Import</button>
+            <button class="accent" onclick="app.togglePlay()" id="playBtn">Play Score</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar Tool Box / Offline Note Base -->
+        <div class="sidebar">
+            <div>
+                <div class="section-title">Note Duration</div>
+                <div class="toolbox-grid">
+                    <button class="dur-btn active" data-duration="1">Whole</button>
+                    <button class="dur-btn" data-duration="0.5">Half</button>
+                    <button class="dur-btn" data-duration="0.25">Quarter</button>
+                    <button class="dur-btn" data-duration="0.125">Eighth</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">Tool Mode</div>
+                <div class="toolbox-grid">
+                    <button class="mode-btn active" data-mode="pencil" onclick="app.setMode('pencil')">Pencil</button>
+                    <button class="mode-btn" data-mode="erase" onclick="app.setMode('erase')">Eraser</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">Offline Note Base</div>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    <select id="presetSelect" onchange="app.loadPreset(this.value)">
+                        <option value="">-- Load Preset --</option>
+                        <option value="scale">C Major Scale</option>
+                        <option value="arpeggio">C Major Arpeggio</option>
+                        <option value="gunk">Dark Alley Gunk riff</option>
+                    </select>
+                    <button onclick="app.clearStaff()">Clear Staff</button>
+                </div>
+            </div>
+
+            <div class="player-console">
+                <div class="section-title" style="margin:0;">Playback Engine</div>
+                <div class="console-row">
+                    <label>Tempo (BPM):</label>
+                    <input type="range" id="tempoRange" min="60" max="180" value="120" oninput="app.updateTempo(this.value)">
+                    <span id="tempoVal">120</span>
+                </div>
+                <div class="console-row">
+                    <label>Waveform:</label>
+                    <select id="waveSelect">
+                        <option value="sine">Sine</option>
+                        <option value="triangle" selected>Triangle</option>
+                        <option value="sawtooth">Sawtooth</option>
+                        <option value="square">Square</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <span>Offline Engine: ACTIVE</span>
+                <span id="noteCount">Notes: 0</span>
+            </div>
+        </div>
+
+        <!-- Sheet Music Canvas Area -->
+        <div class="canvas-area">
+            <div class="sheet-container">
+                <div class="sheet-header">
+                    <input type="text" class="sheet-title-input" id="sheetTitle" value="Untitled Composition">
+                    <div style="font-size: 0.9rem; color: #555;">Standard Treble Staff</div>
+                </div>
+
+                <div class="staff-system" id="staffSystem">
+                    <div class="staff-lines" id="staffLines" onclick="app.handleStaffClick(event)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" style="display:none" onchange="app.handleFileImport(event)">
+
+    <script>
+        class TechroToneApp {
+            constructor() {
+                this.notes = [];
+                this.currentDuration = 0.25;
+                this.currentMode = 'pencil';
+                this.tempo = 120;
+                this.isPlaying = false;
+                this.audioCtx = null;
+                this.playTimer = null;
+
+                // Frequencies mapped across staff vertical offsets (Treble Clef approximation from top to bottom)
+                // Staff has 5 lines and 4 spaces. Step size ~ 7.5px
+                this.pitchMap = [
+                    { note: 'F5', freq: 698.46, top: -7.5 },
+                    { note: 'E5', freq: 659.25, top: 0 },
+                    { note: 'D5', freq: 587.33, top: 7.5 },
+                    { note: 'C5', freq: 523.25, top: 15 },
+                    { note: 'B4', freq: 493.88, top: 22.5 },
+                    { note: 'A4', freq: 440.00, top: 30 },
+                    { note: 'G4', freq: 392.00, top: 37.5 },
+                    { note: 'F4', freq: 349.23, top: 45 },
+                    { note: 'E4', freq: 329.63, top: 52.5 },
+                    { note: 'D4', freq: 293.66, top: 60 }
+                ];
+
+                this.initListeners();
+                this.renderNotes();
+            }
+
+            initListeners() {
+                document.querySelectorAll('.dur-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentDuration = parseFloat(e.target.dataset.duration);
+                    });
+                });
+            }
+
+            setMode(mode) {
+                this.currentMode = mode;
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+            }
+
+            initAudio() {
+                if (!this.audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.audioCtx = new AudioContext();
+                }
+                if (this.audioCtx.state === 'suspended') {
+                    this.audioCtx.resume();
+                }
+            }
+
+            playTone(freq, durationSec) {
+                this.initAudio();
+                const wave = document.getElementById('waveSelect').value;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+
+                osc.type = wave;
+                osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + durationSec);
+
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                osc.start();
+                osc.stop(this.audioCtx.currentTime + durationSec);
+            }
+
+            handleStaffClick(e) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                if (this.currentMode === 'pencil') {
+                    // Quantize y to nearest pitch line/space
+                    let closestPitch = this.pitchMap[0];
+                    let minDiff = 9999;
+
+                    this.pitchMap.forEach(p => {
+                        const diff = Math.abs(p.top - y);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestPitch = p;
+                        }
+                    });
+
+                    this.notes.push({
+                        x: Math.round(x),
+                        y: closestPitch.top,
+                        pitch: closestPitch.note,
+                        freq: closestPitch.freq,
+                        duration: this.currentDuration
+                    });
+
+                    this.playTone(closestPitch.freq, 0.3);
+                    this.renderNotes();
+                }
+            }
+
+            renderNotes() {
+                const staffLines = document.getElementById('staffLines');
+                // Clear existing note elements
+                const existing = staffLines.querySelectorAll('.note-element');
+                existing.forEach(el => el.remove());
+
+                this.notes.forEach((note, index) => {
+                    const el = document.createElement('div');
+                    el.className = 'note-element';
+                    el.style.left = `${note.x}px`;
+                    el.style.top = `${note.y}px`;
+                    el.title = `${note.pitch} (Click to preview/delete)`;
+                    
+                    el.onclick = (ev) => {
+                        ev.stopPropagation();
+                        if (this.currentMode === 'erase') {
+                            this.notes.splice(index, 1);
+                            this.renderNotes();
+                        } else {
+                            this.playTone(note.freq, 0.4);
+                            el.classList.add('selected');
+                            setTimeout(() => el.classList.remove('selected'), 300);
+                        }
+                    };
+
+                    staffLines.appendChild(el);
+                });
+
+                document.getElementById('noteCount').innerText = `Notes: ${this.notes.length}`;
+            }
+
+            clearStaff() {
+                this.notes = [];
+                this.renderNotes();
+            }
+
+            loadPreset(preset) {
+                this.clearStaff();
+                if (preset === 'scale') {
+                    const scaleNotes = [
+                        { pitch: 'D4', freq: 293.66, y: 60 },
+                        { pitch: 'E4', freq: 329.63, y: 52.5 },
+                        { pitch: 'F4', freq: 349.23, y: 45 },
+                        { pitch: 'G4', freq: 392.00, y: 37.5 },
+                        { pitch: 'A4', freq: 440.00, y: 30 },
+                        { pitch: 'B4', freq: 493.88, y: 22.5 },
+                        { pitch: 'C5', freq: 523.25, y: 15 },
+                        { pitch: 'D5', freq: 587.33, y: 7.5 }
+                    ];
+                    scaleNotes.forEach((n, idx) => {
+                        this.notes.push({ x: 50 + (idx * 40), y: n.y, pitch: n.pitch, freq: n.freq, duration: 0.25 });
+                    });
+                } else if (preset === 'arpeggio') {
+                    const arpNotes = [
+                        { pitch: 'C4', freq: 261.63, y: 67.5 },
+                        { pitch: 'E4', freq: 329.63, y: 52.5 },
+                        { pitch: 'G4', freq: 392.00, y: 37.5 },
+                        { pitch: 'C5', freq: 523.25, y: 15 }
+                    ];
+                    arpNotes.forEach((n, idx) => {
+                        this.notes.push({ x: 60 + (idx * 50), y: n.y, pitch: n.pitch, freq: n.freq, duration: 0.25 });
+                    });
+                } else if (preset === 'gunk') {
+                    const gunkNotes = [
+                        { pitch: 'E4', freq: 329.63, y: 52.5 },
+                        { pitch: 'G4', freq: 392.00, y: 37.5 },
+                        { pitch: 'A4', freq: 440.00, y: 30 },
+                        { pitch: 'B4', freq: 493.88, y: 22.5 },
+                        { pitch: 'A4', freq: 440.00, y: 30 }
+                    ];
+                    gunkNotes.forEach((n, idx) => {
+                        this.notes.push({ x: 50 + (idx * 45), y: n.y, pitch: n.pitch, freq: n.freq, duration: 0.25 });
+                    });
+                }
+                this.renderNotes();
+            }
+
+            updateTempo(val) {
+                this.tempo = val;
+                document.getElementById('tempoVal').innerText = val;
+            }
+
+            togglePlay() {
+                const btn = document.getElementById('playBtn');
+                if (this.isPlaying) {
+                    this.stopPlay();
+                    return;
+                }
+
+                if (this.notes.length === 0) return;
+
+                this.isPlaying = true;
+                btn.innerText = 'Stop Playing';
+                btn.style.background = '#ff4444';
+
+                // Sort notes by X coordinate
+                const sortedNotes = [...this.notes].sort((a, b) => a.x - b.x);
+                let currentIndex = 0;
+
+                const beatInterval = (60 / this.tempo) * 1000;
+
+                this.playTimer = setInterval(() => {
+                    if (currentIndex < sortedNotes.length) {
+                        const note = sortedNotes[currentIndex];
+                        this.playTone(note.freq, 0.3);
+                        
+                        // Highlight note visually
+                        const staffLines = document.getElementById('staffLines');
+                        const els = staffLines.querySelectorAll('.note-element');
+                        if(els[currentIndex]) {
+                            els[currentIndex].classList.add('selected');
+                            setTimeout(() => els[currentIndex].classList.remove('selected'), 200);
+                        }
+
+                        currentIndex++;
+                    } else {
+                        this.stopPlay();
+                    }
+                }, beatInterval / 2);
+            }
+
+            stopPlay() {
+                this.isPlaying = false;
+                const btn = document.getElementById('playBtn');
+                btn.innerText = 'Play Score';
+                btn.style.background = '';
+                if (this.playTimer) {
+                    clearInterval(this.playTimer);
+                    this.playTimer = null;
+                }
+            }
+
+            newSheet() {
+                if (confirm('Create new sheet? Unsaved notes will be cleared.')) {
+                    this.clearStaff();
+                    document.getElementById('sheetTitle').value = 'Untitled Composition';
+                }
+            }
+
+            exportJson() {
+                const data = {
+                    title: document.getElementById('sheetTitle').value,
+                    tempo: this.tempo,
+                    notes: this.notes
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${data.title.replace(/\s+/g, '_')}.techrotone`;
+                a.click();
+            }
+
+            importJsonPrompt() {
+                document.getElementById('fileInput').click();
+            }
+
+            handleFileImport(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        document.getElementById('sheetTitle').value = data.title || 'Imported Score';
+                        this.tempo = data.tempo || 120;
+                        document.getElementById('tempoRange').value = this.tempo;
+                        document.getElementById('tempoVal').innerText = this.tempo;
+                        this.notes = data.notes || [];
+                        this.renderNotes();
+                    } catch (err) {
+                        alert('Invalid TechroTone score file.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        const app = new TechroToneApp();
+    </script>
+</body>
+</html>
